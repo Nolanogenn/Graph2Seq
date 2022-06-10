@@ -1,5 +1,6 @@
 # Graph2Seq
-Graph2Seq is a simple code for building a graph-encoder and sequence-decoder for NLP and other AI/ML/DL tasks. 
+Graph2Seq is a simple code for building a graph-encoder and sequence-decoder for NLP and other AI/ML/DL tasks.  
+**Notes by Nolanogenn**: I have updated this code, so that now it should be usable on Tensorflow 2 as well.
 
 # How To Run The Codes
 To train your graph-to-sequence model, you need:
