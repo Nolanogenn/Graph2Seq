@@ -44,7 +44,7 @@ class Layer(object):
         return inputs
 
     def __call__(self, inputs):
-        with tf.name_scope(self.name):
+        with tf.compat.v1.name_scope(self.name):
             outputs = self._call(inputs)
             return outputs
 
@@ -68,11 +68,11 @@ class Dense(Layer):
         if sparse_inputs:
             self.num_features_nonzero = placeholders['num_features_nonzero']
 
-        with tf.variable_scope(self.name + '_vars'):
-            self.vars['weights'] = tf.get_variable('weights', shape=(input_dim, output_dim),
+        with tf.compat.v1.variable_scope(self.name + '_vars'):
+            self.vars['weights'] = tf.compat.v1.get_variable('weights', shape=(input_dim, output_dim),
                                          dtype=tf.float32,
-                                         initializer=tf.contrib.layers.xavier_initializer(),
-                                         regularizer=tf.contrib.layers.l2_regularizer(conf.weight_decay))
+                                         initializer=tf.compat.v1.keras.initializers.VarianceScaling(scale=1.0, mode="fan_avg", distribution="uniform"),
+                                         regularizer=tf.keras.regularizers.l2(0.5 * (conf.weight_decay)))
             if self.bias:
                 self.vars['bias'] = zeros([output_dim], name='bias')
 

@@ -17,7 +17,7 @@ encoder_hidden_dim = 200
 num_layers_decode = 1
 word_size_max = 1
 
-dropout = 0.0
+dropout = 0.2
 
 path_embed_method = "lstm" # cnn or lstm or bi-lstm
 

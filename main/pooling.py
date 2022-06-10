@@ -29,14 +29,14 @@ def mean_pool(input_tensor, sequence_length=None):
         A tensor of one less dimension than the input, with the size of the
         last dimension equal to the hidden dimension state size.
     """
-    with tf.name_scope("mean_pool"):
+    with tf.compat.v1.name_scope("mean_pool"):
         # shape (batch_size, sequence_length)
-        input_tensor_sum = tf.reduce_sum(input_tensor, axis=-2)
+        input_tensor_sum = tf.reduce_sum(input_tensor=input_tensor, axis=-2)
 
         # If sequence_length is None, divide by the sequence length
         # as indicated by the input tensor.
         if sequence_length is None:
-            sequence_length = tf.shape(input_tensor)[-2]
+            sequence_length = tf.shape(input=input_tensor)[-2]
 
         # Expand sequence length from shape (batch_size,) to
         # (batch_size, 1) for broadcasting to work.
@@ -51,10 +51,10 @@ def mean_pool(input_tensor, sequence_length=None):
 
 def handle_pad_max_pooling(tensor, last_dim):
     tensor = tf.reshape(tensor, [-1, last_dim])
-    bs = tf.shape(tensor)[0]
+    bs = tf.shape(input=tensor)[0]
     tt = tf.fill(tf.stack([bs, last_dim]), -1e9)
     cond = tf.not_equal(tensor, 0.0)
-    res = tf.where(cond, tensor, tt)
+    res = tf.compat.v1.where(cond, tensor, tt)
     return res
 
 def max_pool(input_tensor, last_dim, sequence_length=None):
@@ -64,10 +64,10 @@ def max_pool(input_tensor, last_dim, sequence_length=None):
     :param sequence_length:
     :return:
     """
-    with tf.name_scope("max_pool"):
+    with tf.compat.v1.name_scope("max_pool"):
         #shape [batch_size, sequence_length]
-        mid_dim = tf.shape(input_tensor)[1]
+        mid_dim = tf.shape(input=input_tensor)[1]
         input_tensor = handle_pad_max_pooling(input_tensor, last_dim)
         input_tensor = tf.reshape(input_tensor, [-1, mid_dim, last_dim])
-        input_tensor_max = tf.reduce_max(input_tensor, axis=-2)
+        input_tensor_max = tf.reduce_max(input_tensor=input_tensor, axis=-2)
         return input_tensor_max

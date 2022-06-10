@@ -1,7 +1,9 @@
 import tensorflow as tf
-from tensorflow.python.layers.core import Dense
+#from tensorflow.python.layers.core import Dense
+from keras.layers import Dense
 from tensorflow.python.ops.rnn_cell_impl import LSTMStateTuple
-import tensorflow.contrib.seq2seq as seq2seq
+import tensorflow_addons as tfa
+import tensorflow_addons.seq2seq as seq2seq
 
 from neigh_samplers import UniformNeighborSampler
 from aggregators import MeanAggregator, MaxPoolingAggregator, GatedMeanAggregator
@@ -37,19 +39,19 @@ class Graph2SeqNN(object):
         self.decoder_type = conf.decoder_type
         self.seq_max_len = conf.seq_max_len
 
-        self._text = tf.placeholder(tf.int32, [None, None])
-        self.decoder_seq_length = tf.placeholder(tf.int32, [None])
-        self.loss_weights = tf.placeholder(tf.float32, [None, None])
+        self._text = tf.compat.v1.placeholder(tf.int32, [None, None])
+        self.decoder_seq_length = tf.compat.v1.placeholder(tf.int32, [None])
+        self.loss_weights = tf.compat.v1.placeholder(tf.float32, [None, None])
 
         # the following place holders are for the gcn
-        self.fw_adj_info = tf.placeholder(tf.int32, [None, None])               # the fw adj info for each node
-        self.bw_adj_info = tf.placeholder(tf.int32, [None, None])               # the bw adj info for each node
-        self.feature_info = tf.placeholder(tf.int32, [None, None])              # the feature info for each node
-        self.batch_nodes = tf.placeholder(tf.int32, [None, None])               # the nodes for each batch
+        self.fw_adj_info = tf.compat.v1.placeholder(tf.int32, [None, None])               # the fw adj info for each node
+        self.bw_adj_info = tf.compat.v1.placeholder(tf.int32, [None, None])               # the bw adj info for each node
+        self.feature_info = tf.compat.v1.placeholder(tf.int32, [None, None])              # the feature info for each node
+        self.batch_nodes = tf.compat.v1.placeholder(tf.int32, [None, None])               # the nodes for each batch
 
-        self.sample_size_per_layer = tf.shape(self.fw_adj_info)[1]
+        self.sample_size_per_layer = tf.shape(input=self.fw_adj_info)[1]
 
-        self.single_graph_nodes_size = tf.shape(self.batch_nodes)[1]
+        self.single_graph_nodes_size = tf.shape(input=self.batch_nodes)[1]
         self.attention = conf.attention
         self.dropout = conf.dropout
         self.fw_aggregators = []
@@ -60,29 +62,34 @@ class Graph2SeqNN(object):
         self.learning_rate = conf.learning_rate
 
     def _init_decoder_train_connectors(self):
-        batch_size, sequence_size = tf.unstack(tf.shape(self._text))
+        batch_size, sequence_size = tf.unstack(tf.shape(input=self._text))
         self.batch_size = batch_size
         GO_SLICE = tf.ones([batch_size, 1], dtype=tf.int32) * self.GO
         EOS_SLICE = tf.ones([batch_size, 1], dtype=tf.int32) * self.PAD
         self.decoder_train_inputs = tf.concat([GO_SLICE, self._text], axis=1)
         self.decoder_train_length = self.decoder_seq_length + 1
         decoder_train_targets = tf.concat([self._text, EOS_SLICE], axis=1)
-        _, decoder_train_targets_seq_len = tf.unstack(tf.shape(decoder_train_targets))
+        _, decoder_train_targets_seq_len = tf.unstack(tf.shape(input=decoder_train_targets))
         decoder_train_targets_eos_mask = tf.one_hot(self.decoder_train_length - 1, decoder_train_targets_seq_len,
                                                     on_value=self.EOS, off_value=self.PAD, dtype=tf.int32)
         self.decoder_train_targets = tf.add(decoder_train_targets, decoder_train_targets_eos_mask)
-        self.decoder_train_inputs_embedded = tf.nn.embedding_lookup(self.word_embeddings, self.decoder_train_inputs)
+        self.decoder_train_inputs_embedded = tf.nn.embedding_lookup(params=self.word_embeddings, ids=self.decoder_train_inputs)
 
 
 
     def encode(self):
-        with tf.variable_scope("embedding_layer"):
+        with tf.compat.v1.variable_scope("embedding_layer"):
             pad_word_embedding = tf.zeros([1, self.word_embedding_dim])  # this is for the PAD symbol
-            self.word_embeddings = tf.concat([pad_word_embedding,
-                                              tf.get_variable('W_train', shape=[self.word_vocab_size,self.word_embedding_dim],
-                                                                            initializer=tf.contrib.layers.xavier_initializer(), trainable=True)], 0)
+            self.word_embeddings = tf.concat([
+                pad_word_embedding,
+                tf.compat.v1.get_variable(
+                    'W_train',
+                    shape=[self.word_vocab_size,self.word_embedding_dim],
+                    initializer=tf.keras.initializers.GlorotNormal(),
+                    trainable=True)],
+                    0)
 
-        with tf.variable_scope("graph_encoding_layer"):
+        with tf.compat.v1.variable_scope("graph_encoding_layer"):
 
             # self.encoder_outputs, self.encoder_state = self.gcn_encode()
 
@@ -90,8 +97,8 @@ class Graph2SeqNN(object):
             encoder_outputs, encoder_state = self.optimized_gcn_encode()
 
             source_sequence_length = tf.reshape(
-                tf.ones([tf.shape(encoder_outputs)[0], 1], dtype=tf.int32) * self.single_graph_nodes_size,
-                (tf.shape(encoder_outputs)[0],))
+                tf.ones([tf.shape(input=encoder_outputs)[0], 1], dtype=tf.int32) * self.single_graph_nodes_size,
+                (tf.shape(input=encoder_outputs)[0],))
 
             return encoder_outputs, encoder_state, source_sequence_length
 
@@ -100,8 +107,8 @@ class Graph2SeqNN(object):
         # cell = self._build_encoder_cell(conf.num_layers, conf.dim)
 
 
-        feature_embedded_chars = tf.nn.embedding_lookup(word_embeddings, feature_info)
-        batch_size = tf.shape(feature_embedded_chars)[0]
+        feature_embedded_chars = tf.nn.embedding_lookup(params=word_embeddings, ids=feature_info)
+        batch_size = tf.shape(input=feature_embedded_chars)[0]
 
         # node_repres = match_utils.multi_highway_layer(feature_embedded_chars, self.hidden_layer_dim, num_layers=1)
         # node_repres = tf.reshape(node_repres, [batch_size, -1])
@@ -125,8 +132,8 @@ class Graph2SeqNN(object):
 
         # the fw_hidden and bw_hidden is the initial node embedding
         # [node_size, dim_size]
-        fw_hidden = tf.nn.embedding_lookup(embedded_node_rep, nodes)
-        bw_hidden = tf.nn.embedding_lookup(embedded_node_rep, nodes)
+        fw_hidden = tf.nn.embedding_lookup(params=embedded_node_rep, ids=nodes)
+        bw_hidden = tf.nn.embedding_lookup(params=embedded_node_rep, ids=nodes)
 
         # [node_size, adj_size]
         fw_sampled_neighbors = fw_sampler((nodes, self.sample_size_per_layer))
@@ -150,16 +157,16 @@ class Graph2SeqNN(object):
 
             # [node_size, adj_size, word_embedding_dim]
             if layer == 0:
-                neigh_vec_hidden = tf.nn.embedding_lookup(embedded_node_rep, fw_sampled_neighbors)
+                neigh_vec_hidden = tf.nn.embedding_lookup(params=embedded_node_rep, ids=fw_sampled_neighbors)
 
                 # compute the neighbor size
-                tmp_sum = tf.reduce_sum(tf.nn.relu(neigh_vec_hidden), axis=2)
+                tmp_sum = tf.reduce_sum(input_tensor=tf.nn.relu(neigh_vec_hidden), axis=2)
                 tmp_mask = tf.sign(tmp_sum)
-                fw_sampled_neighbors_len = tf.reduce_sum(tmp_mask, axis=1)
+                fw_sampled_neighbors_len = tf.reduce_sum(input_tensor=tmp_mask, axis=1)
 
             else:
                 neigh_vec_hidden = tf.nn.embedding_lookup(
-                    tf.concat([fw_hidden, tf.zeros([1, dim_mul * self.hidden_layer_dim])], 0), fw_sampled_neighbors)
+                    params=tf.concat([fw_hidden, tf.zeros([1, dim_mul * self.hidden_layer_dim])], 0), ids=fw_sampled_neighbors)
 
             fw_hidden = fw_aggregator((fw_hidden, neigh_vec_hidden, fw_sampled_neighbors_len))
 
@@ -172,16 +179,16 @@ class Graph2SeqNN(object):
                     self.bw_aggregators.append(bw_aggregator)
 
                 if layer == 0:
-                    neigh_vec_hidden = tf.nn.embedding_lookup(embedded_node_rep, bw_sampled_neighbors)
+                    neigh_vec_hidden = tf.nn.embedding_lookup(params=embedded_node_rep, ids=bw_sampled_neighbors)
 
                     # compute the neighbor size
-                    tmp_sum = tf.reduce_sum(tf.nn.relu(neigh_vec_hidden), axis=2)
+                    tmp_sum = tf.reduce_sum(input_tensor=tf.nn.relu(neigh_vec_hidden), axis=2)
                     tmp_mask = tf.sign(tmp_sum)
-                    bw_sampled_neighbors_len = tf.reduce_sum(tmp_mask, axis=1)
+                    bw_sampled_neighbors_len = tf.reduce_sum(input_tensor=tmp_mask, axis=1)
 
                 else:
                     neigh_vec_hidden = tf.nn.embedding_lookup(
-                        tf.concat([bw_hidden, tf.zeros([1, dim_mul * self.hidden_layer_dim])], 0), bw_sampled_neighbors)
+                        params=tf.concat([bw_hidden, tf.zeros([1, dim_mul * self.hidden_layer_dim])], 0), ids=bw_sampled_neighbors)
 
                 bw_hidden = bw_aggregator((bw_hidden, neigh_vec_hidden, bw_sampled_neighbors_len))
 
@@ -195,116 +202,159 @@ class Graph2SeqNN(object):
 
         hidden = tf.nn.relu(hidden)
 
-        pooled = tf.reduce_max(hidden, 1)
+        pooled = tf.reduce_max(input_tensor=hidden, axis=1)
         if self.graph_encode_direction == "bi":
             graph_embedding = tf.reshape(pooled, [-1, 4 * self.hidden_layer_dim])
         else:
             graph_embedding = tf.reshape(pooled, [-1, 2 * self.hidden_layer_dim])
 
-        graph_embedding = LSTMStateTuple(c=graph_embedding, h=graph_embedding)
+        graph_embedding = list(LSTMStateTuple(c=graph_embedding, h=graph_embedding))
 
         # shape of hidden: [batch_size, single_graph_nodes_size, 4 * hidden_layer_dim]
         # shape of graph_embedding: ([batch_size, 4 * hidden_layer_dim], [batch_size, 4 * hidden_layer_dim])
         return hidden, graph_embedding
 
     def decode(self, encoder_outputs, encoder_state, source_sequence_length):
-        with tf.variable_scope("Decoder") as scope:
+        with tf.compat.v1.variable_scope("Decoder") as scope:
             beam_width = self.beam_width
             decoder_type = self.decoder_type
             seq_max_len = self.seq_max_len
-            batch_size = tf.shape(encoder_outputs)[0]
+            batch_size = tf.shape(input=encoder_outputs)[0]
+            #batch_size = 6
 
             if self.path_embed_method == "lstm":
                 self.decoder_cell = self._build_decode_cell()
                 if self.mode == "test" and beam_width > 0:
                     memory = seq2seq.tile_batch(self.encoder_outputs, multiplier=beam_width)
-                    source_sequence_length = seq2seq.tile_batch(self.source_sequence_length, multiplier=beam_width)
-                    encoder_state = seq2seq.tile_batch(self.encoder_state, multiplier=beam_width)
+                    source_sequence_length = seq2seq.tile_batch(
+                            self.source_sequence_length,
+                            multiplier=beam_width)
+                    encoder_state = seq2seq.tile_batch(
+                            self.encoder_state,
+                            multiplier=beam_width,
+                            dtype=tf.float32)
                     batch_size = self.batch_size * beam_width
                 else:
                     memory = encoder_outputs
                     source_sequence_length = source_sequence_length
                     encoder_state = encoder_state
 
-                attention_mechanism = seq2seq.BahdanauAttention(self.hidden_layer_dim, memory,
-                                                                memory_sequence_length=source_sequence_length)
-                self.decoder_cell = seq2seq.AttentionWrapper(self.decoder_cell, attention_mechanism,
-                                                             attention_layer_size=self.hidden_layer_dim)
-                self.decoder_initial_state = self.decoder_cell.zero_state(batch_size, tf.float32).clone(cell_state=encoder_state)
+                attention_mechanism = seq2seq.BahdanauAttention(
+                        self.hidden_layer_dim,
+                        memory,
+                        memory_sequence_length=source_sequence_length)
+                self.decoder_cell = seq2seq.AttentionWrapper(
+                        self.decoder_cell,
+                        attention_mechanism,
+                        attention_layer_size=self.hidden_layer_dim,
+                        dtype=tf.float32)
+                self.decoder_initial_state = self.decoder_cell.get_initial_state(
+                        batch_size=batch_size,
+                        dtype=tf.float32).clone(cell_state=encoder_state)
 
             projection_layer = Dense(self.word_vocab_size, use_bias=False)
 
             """For training the model"""
             if self.mode == "train":
-                decoder_train_helper = tf.contrib.seq2seq.TrainingHelper(self.decoder_train_inputs_embedded,
-                                                                         self.decoder_train_length)
-                decoder_train = seq2seq.BasicDecoder(self.decoder_cell, decoder_train_helper,
-                                                     self.decoder_initial_state,
-                                                     projection_layer)
-                decoder_outputs_train, decoder_states_train, decoder_seq_len_train = seq2seq.dynamic_decode(decoder_train)
+                decoder_train_helper = tfa.seq2seq.TrainingSampler()
+                decoder_train_helper.initialize(
+                        inputs = self.decoder_train_inputs_embedded,
+                        sequence_length=self.decoder_train_length)
+                decoder_train = seq2seq.BasicDecoder(
+                        cell = self.decoder_cell,
+                        sampler=decoder_train_helper,
+                        #initial_state = self.decoder_initial_state,
+                        output_layer = projection_layer)
+
+                #decoder_outputs_train, decoder_states_train, decoder_seq_len_train = seq2seq.dynamic_decode(decoder_train)
+                decoder_outputs_train, decoder_states_train, decoder_seq_len_train = decoder_train(
+                        self.decoder_train_inputs_embedded,
+                        sequence_length=self.decoder_train_length,
+                        initial_state=self.decoder_initial_state)
                 decoder_logits_train = decoder_outputs_train.rnn_output
                 self.decoder_logits_train = tf.reshape(decoder_logits_train, [batch_size, -1, self.word_vocab_size])
 
             """For test the model"""
             # if self.mode == "infer" or self.if_pred_on_dev:
             if decoder_type == "greedy":
-                decoder_infer_helper = seq2seq.GreedyEmbeddingHelper(self.word_embeddings,
-                                                                     tf.ones([batch_size], dtype=tf.int32),
-                                                                     self.EOS)
-                decoder_infer = seq2seq.BasicDecoder(self.decoder_cell, decoder_infer_helper,
-                                                     self.decoder_initial_state, projection_layer)
-            elif decoder_type == "beam":
-                decoder_infer = seq2seq.BeamSearchDecoder(cell=self.decoder_cell, embedding=self.word_embeddings,
-                                                          start_tokens=tf.ones([batch_size], dtype=tf.int32),
-                                                          end_token=self.EOS,
-                                                          initial_state=self.decoder_initial_state,
-                                                          beam_width=beam_width,
-                                                          output_layer=projection_layer)
+                #print(self.word_embeddings.shape)
+                decoder_infer_helper = seq2seq.GreedyEmbeddingSampler()
+                decoder_infer_helper.initialize(
+                            embedding=self.word_embeddings,
+                            start_tokens=tf.ones(
+                            [batch_size],
+                            dtype=tf.int32),
+                            end_token=self.EOS)
+                decoder_infer = seq2seq.BasicDecoder(
+                        cell = self.decoder_cell,
+                        sampler = decoder_infer_helper,
+                        output_layer=projection_layer)
 
-            decoder_outputs_infer, decoder_states_infer, decoder_seq_len_infer = seq2seq.dynamic_decode(decoder_infer,
-                                                                                                        maximum_iterations=seq_max_len)
+            elif decoder_type == "beam":
+                decoder_infer = seq2seq.BeamSearchDecoder(
+                        cell=self.decoder_cell,
+                        beam_width=beam_width,
+                        output_layer=projection_layer)
+
+            decoder_outputs_infer, decoder_states_infer, decoder_seq_len_infer = seq2seq.dynamic_decode(
+                    decoder=decoder_infer,
+                    decoder_init_input=self.word_embeddings,
+                    maximum_iterations=seq_max_len,
+                    decoder_init_kwargs={
+                        "start_tokens":tf.ones([batch_size],dtype=tf.int32),
+                        "initial_state":self.decoder_initial_state,
+                        "end_token":self.EOS
+                        }
+                    )
 
             if decoder_type == "beam":
+                print("step:2 - type: beam")
                 self.decoder_logits_infer = tf.no_op()
                 self.sample_id = decoder_outputs_infer.predicted_ids
 
             elif decoder_type == "greedy":
+                print("step:2 - type: greedy")
                 self.decoder_logits_infer = decoder_outputs_infer.rnn_output
                 self.sample_id = decoder_outputs_infer.sample_id
 
     def _build_decode_cell(self):
         if self.num_layers == 1:
-            cell = tf.nn.rnn_cell.BasicLSTMCell(num_units=4*self.hidden_layer_dim)
+            cell = tf.keras.layers.LSTMCell(
+                    units=4*self.hidden_layer_dim)
             if self.mode == "train":
-                cell = tf.nn.rnn_cell.DropoutWrapper(cell, 1 - self.dropout)
+                cell = tf.keras.layers.LSTMCell(
+                    units=4*self.hidden_layer_dim,
+                    dropout=1-self.dropout)
             return cell
         else:
             cell_list = []
             for i in range(self.num_layers):
-                single_cell = tf.contrib.rnn.BasicLSTMCell(self._decoder_hidden_size)
+                single_cell = tf.compat.v1.rnn.BasicLSTMCell(self._decoder_hidden_size)
                 if self.mode == "train":
-                    single_cell = tf.nn.rnn_cell.DropoutWrapper(single_cell, 1 - self.dropout)
+                    single_cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(
+                            single_cell,
+                            1 - self.dropout)
                 cell_list.append(single_cell)
-            return tf.contrib.rnn.MultiRNNCell(cell_list)
+            return tf.compat.v1.rnn.MultiRNNCell(cell_list)
 
     def _build_encoder_cell(self, num_layers, hidden_layer_dim):
         if num_layers == 1:
-            cell = tf.nn.rnn_cell.BasicLSTMCell(hidden_layer_dim)
+            cell = tf.keras.layers.LSTMCell(hidden_layer_dim)
             if self.mode == "train":
-                cell = tf.nn.rnn_cell.DropoutWrapper(cell, 1 - self.dropout)
+                cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(cell, 1 - self.dropout)
             return cell
         else:
             cell_list = []
             for i in range(num_layers):
-                single_cell = tf.contrib.rnn.BasicLSTMCell(hidden_layer_dim)
+                single_cell = tf.compat.v1.rnn.BasicLSTMCell(hidden_layer_dim)
                 if self.mode == "train":
-                    single_cell = tf.nn.rnn_cell.DropoutWrapper(single_cell, 1 - self.dropout)
+                    single_cell = tf.compat.v1.nn.rnn_cell.DropoutWrapper(single_cell, 1 - self.dropout)
                 cell_list.append(single_cell)
-            return tf.contrib.rnn.MultiRNNCell(cell_list)
+            return tf.compat.v1.rnn.MultiRNNCell(cell_list)
 
     def _init_optimizer(self):
         crossent = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.decoder_train_targets, logits=self.decoder_logits_train)
-        decode_loss = (tf.reduce_sum(crossent * self.loss_weights) / tf.cast(self.batch_size, tf.float32))
+        decode_loss = (tf.reduce_sum(input_tensor=crossent * self.loss_weights) / tf.cast(self.batch_size, tf.float32))
 
         train_loss = decode_loss
 
@@ -318,10 +368,10 @@ class Graph2SeqNN(object):
 
         self.loss_op = train_loss
         self.cross_entropy_sum = train_loss
-        params = tf.trainable_variables()
-        gradients = tf.gradients(train_loss, params)
+        params = tf.compat.v1.trainable_variables()
+        gradients = tf.gradients(ys=train_loss, xs=params)
         clipped_gradients, _ = tf.clip_by_global_norm(gradients, 1)
-        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate=self.learning_rate)
         self.train_op = optimizer.apply_gradients(zip(clipped_gradients, params))
 
     def _build_graph(self):
@@ -330,7 +380,10 @@ class Graph2SeqNN(object):
         if self.mode == "train":
             self._init_decoder_train_connectors()
 
-        self.decode(encoder_outputs=encoder_outputs, encoder_state=encoder_state, source_sequence_length=source_sequence_length)
+        self.decode(
+                encoder_outputs=encoder_outputs,
+                encoder_state=encoder_state,
+                source_sequence_length=source_sequence_length)
 
         if self.mode == "train":
             self._init_optimizer()

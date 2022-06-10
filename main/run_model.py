@@ -39,12 +39,12 @@ def main(mode):
         conf.word_vocab_size = len(word_idx.keys()) + 1
 
         with tf.Graph().as_default():
-            with tf.Session() as sess:
+            with tf.compat.v1.Session() as sess:
                 model = Graph2SeqNN("train", conf, path_embed_method="lstm")
 
                 model._build_graph()
-                saver = tf.train.Saver(max_to_keep=None)
-                sess.run(tf.initialize_all_variables())
+                saver = tf.compat.v1.train.Saver(max_to_keep=None)
+                sess.run(tf.compat.v1.initialize_all_variables())
 
                 def train_step(seqs, decoder_seq_length, loss_weights, batch_graph, if_pred_on_dev=False):
                     dict = {}
@@ -154,10 +154,10 @@ def main(mode):
         conf.word_vocab_size = len(word_idx.keys()) + 1
 
         with tf.Graph().as_default():
-            with tf.Session() as sess:
+            with tf.compat.v1.Session() as sess:
                 model = Graph2SeqNN("test", conf, path_embed_method="lstm")
                 model._build_graph()
-                saver = tf.train.Saver(max_to_keep=None)
+                saver = tf.compat.v1.train.Saver(max_to_keep=None)
 
                 model_path_name = "../saved_model/model-0"
                 model_pred_path = "../saved_model/prediction.txt"

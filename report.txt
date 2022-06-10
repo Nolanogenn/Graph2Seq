@@ -1,0 +1,206 @@
+TensorFlow 2.0 Upgrade Script
+-----------------------------
+Converted 18 files
+Detected 19 issues that require attention
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+File: main/layer_utils.py
+--------------------------------------------------------------------------------
+main/layer_utils.py:19:19: WARNING: Using member tf.contrib.cudnn_rnn.CudnnLSTM in deprecated module tf.contrib.cudnn_rnn. (Manual edit required) tf.contrib.cudnn_rnn.* has been deprecated, and the CuDNN kernel has been integrated with tf.keras.layers.LSTM/GRU in TensorFlow 2.0. Please check the new API and use that instead.
+main/layer_utils.py:19:19: ERROR: Using member tf.contrib.cudnn_rnn.CudnnLSTM in deprecated module tf.contrib. tf.contrib.cudnn_rnn.CudnnLSTM cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+main/layer_utils.py:42:22: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+File: main/match_utils.py
+--------------------------------------------------------------------------------
+main/match_utils.py:346:40: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+main/match_utils.py:347:39: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+File: main/neigh_samplers.py
+--------------------------------------------------------------------------------
+main/neigh_samplers.py:15:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+--------------------------------------------------------------------------------
+File: main/run_model.py
+--------------------------------------------------------------------------------
+main/run_model.py:132:31: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+--------------------------------------------------------------------------------
+File: main/aggregators.py
+--------------------------------------------------------------------------------
+main/aggregators.py:47:21: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+main/aggregators.py:48:20: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+main/aggregators.py:112:25: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+main/aggregators.py:113:24: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+File: main/model.py
+--------------------------------------------------------------------------------
+main/model.py:76:45: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:105:33: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:130:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:131:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:155:35: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:163:35: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:177:39: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+main/model.py:185:39: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+================================================================================
+Detailed log follows:
+
+================================================================================
+================================================================================
+Input tree: 'main'
+================================================================================
+--------------------------------------------------------------------------------
+Processing file 'main/__init__.py'
+ outputting to 'main/__init__.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/batch_helper.py'
+ outputting to 'main/batch_helper.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/data_collector.py'
+ outputting to 'main/data_collector.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/data_creator.py'
+ outputting to 'main/data_creator.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/evaluator.py'
+ outputting to 'main/evaluator.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/helpers.py'
+ outputting to 'main/helpers.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/layer_utils.py'
+ outputting to 'main/layer_utils.py'
+--------------------------------------------------------------------------------
+
+19:19: WARNING: Using member tf.contrib.cudnn_rnn.CudnnLSTM in deprecated module tf.contrib.cudnn_rnn. (Manual edit required) tf.contrib.cudnn_rnn.* has been deprecated, and the CuDNN kernel has been integrated with tf.keras.layers.LSTM/GRU in TensorFlow 2.0. Please check the new API and use that instead.
+19:19: ERROR: Using member tf.contrib.cudnn_rnn.CudnnLSTM in deprecated module tf.contrib. tf.contrib.cudnn_rnn.CudnnLSTM cannot be converted automatically. tf.contrib will not be distributed with TensorFlow 2.0, please consider an alternative in non-contrib TensorFlow, a community-maintained repository such as tensorflow/addons, or fork the required code.
+42:22: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/layers.py'
+ outputting to 'main/layers.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/loaderAndwriter.py'
+ outputting to 'main/loaderAndwriter.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/match_utils.py'
+ outputting to 'main/match_utils.py'
+--------------------------------------------------------------------------------
+
+346:40: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+347:39: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/neigh_samplers.py'
+ outputting to 'main/neigh_samplers.py'
+--------------------------------------------------------------------------------
+
+15:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/pooling.py'
+ outputting to 'main/pooling.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/text_decoder.py'
+ outputting to 'main/text_decoder.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/configure.py'
+ outputting to 'main/configure.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/run_model.py'
+ outputting to 'main/run_model.py'
+--------------------------------------------------------------------------------
+
+132:31: WARNING: *.save requires manual check. (This warning is only applicable if the code saves a tf.Keras model) Keras model.save now saves to the Tensorflow SavedModel format by default, instead of HDF5. To continue saving to HDF5, add the argument save_format='h5' to the save() function.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/inits.py'
+ outputting to 'main/inits.py'
+--------------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/aggregators.py'
+ outputting to 'main/aggregators.py'
+--------------------------------------------------------------------------------
+
+47:21: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+48:20: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+112:25: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+113:24: ERROR: tf.nn.dropout called without arguments, so automatic fix was disabled. tf.nn.dropout has changed the semantics of the second argument.
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+Processing file 'main/model.py'
+ outputting to 'main/model.py'
+--------------------------------------------------------------------------------
+
+76:45: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+105:33: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+130:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+131:20: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+155:35: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+163:35: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+177:39: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+185:39: WARNING: tf.nn.embedding_lookup requires manual check. `partition_strategy` has been removed from tf.nn.embedding_lookup.  The 'div' strategy will be used by default.
+--------------------------------------------------------------------------------
+
